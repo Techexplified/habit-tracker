@@ -7,32 +7,51 @@
     <script src="https://p.trellocdn.com/power-up.min.js"></script>
     <script>
       window.TrelloPowerUp.initialize({
-        'authorization-status': function (t, options) {
-          return t.get('member', 'private', 'token')
-            .then(function (token) {
-              return { authorized: !!token };
-            })
-            .catch(function () {
-              return { authorized: false };
-            });
-        },
-        'show-authorization': function (t, options) {
-          return t.popup({
-            title: 'Authorize Habit Tracker',
-            url: './authorize.html',
-            height: 220
-          });
+        'board-buttons': function (t, options) {
+          return [
+            {
+              icon: {
+                dark: window.location.origin + '/icons/flame-dark.svg',
+                light: window.location.origin + '/icons/flame-light.svg'
+              },
+              text: 'Habit Tracker',
+              callback: function (tContext) {
+                return tContext.modal({
+                  title: 'Habit & Streak Tracker',
+                  url: window.location.origin + '/index.html',
+                  height: 840,
+                  fullscreen: false
+                });
+              }
+            }
+          ];
         },
         'card-back-section': function (t, options) {
           return {
             title: 'Habit & Streak Tracker',
-            icon: window.location.origin + '/icons/flame.svg',
+            icon: window.location.origin + '/icons/flame-dark.svg',
             content: {
               type: 'iframe',
               url: t.signUrl(window.location.origin + '/index.html'),
               height: 860
             }
           };
+        },
+        'card-buttons': function (t, options) {
+          return [
+            {
+              icon: window.location.origin + '/icons/flame-light.svg',
+              text: 'Habit Tracker',
+              callback: function (tContext) {
+                return tContext.modal({
+                  title: 'Habit & Streak Tracker',
+                  url: window.location.origin + '/index.html',
+                  height: 840,
+                  fullscreen: false
+                });
+              }
+            }
+          ];
         },
         'card-badges': function (t, options) {
           return t.get('card', 'shared', 'habit_data')
@@ -66,7 +85,7 @@
                     return tContext.modal({
                       title: 'Habit & Streak Tracker',
                       url: window.location.origin + '/index.html',
-                      height: 800,
+                      height: 840,
                       fullscreen: false
                     });
                   }
@@ -76,41 +95,6 @@
             .catch(function () {
               return [];
             });
-        },
-        'card-buttons': function (t, options) {
-          return [
-            {
-              icon: window.location.origin + '/icons/flame.svg',
-              text: 'Habit Tracker',
-              callback: function (tContext) {
-                return tContext.modal({
-                  title: 'Habit & Streak Tracker',
-                  url: window.location.origin + '/index.html',
-                  height: 800,
-                  fullscreen: false
-                });
-              }
-            }
-          ];
-        },
-        'board-buttons': function (t, options) {
-          return [
-            {
-              icon: {
-                dark: window.location.origin + '/icons/flame.svg',
-                light: window.location.origin + '/icons/flame.svg'
-              },
-              text: 'Habit Tracker',
-              callback: function (tContext) {
-                return tContext.modal({
-                  title: 'Habit & Streak Tracker',
-                  url: window.location.origin + '/index.html',
-                  height: 800,
-                  fullscreen: false
-                });
-              }
-            }
-          ];
         }
       });
     </script>
