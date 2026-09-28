@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Habit & Streak Tracker Connector</title>
+    <!-- Official Trello Power-Up Client Library -->
+    <script src="https://p.trellocdn.com/power-up.min.js"></script>
+    <script>
+      window.TrelloPowerUp.initialize({
+        'authorization-status': function (t, options) {
+          return t.get('member', 'private', 'token')
+            .then(function (token) {
+              return { authorized: !!token };
+            })
+            .catch(function () {
+              return { authorized: false };
+            });
+        },
+        'show-authorization': function (t, options) {
+          return t.popup({
+            title: 'Authorize Habit Tracker',
+            url: './authorize.html',
+            height: 220
+          });
+        },
+        'card-back-section': function (t, options) {
+          return {
+            title: 'Habit & Streak Tracker',
+            icon: window.location.origin + '/icons/flame.svg',
+            content: {
+              type: 'iframe',
+              url: t.signUrl(window.location.origin + '/index.html'),
+              height: 860
+            }
+          };
+        },
+        'card-badges': function (t, options) {
+          return t.get('card', 'shared', 'habit_data')
+            .then(function (data) {
+              if (!data || typeof data.currentStreak !== 'number' || data.currentStreak === 0) {
+                return [];
+              }
+              return [
+                {
+                  text: '🔥 ' + data.currentStreak + 'd streak',
+                  color: data.markedToday ? 'green' : 'blue'
+                }
+              ];
+            })
+            .catch(function () {
+              return [];
+            });
+        },
+        'card-detail-badges': function (t, options) {
+          return t.get('card', 'shared', 'habit_data')
+            .then(function (data) {
+              if (!data || typeof data.currentStreak !== 'number') {
+                return [];
+              }
+              return [
+                {
+                  title: 'Habit Streak',
+                  text: data.currentStreak + ' days' + (data.markedToday ? ' (Completed)' : ''),
+                  color: data.markedToday ? 'green' : 'blue',
+                  callback: function (tContext) {
+                    return tContext.modal({
+                      title: 'Habit & Streak Tracker',
+                      url: window.location.origin + '/index.html',
+                      height: 800,
+                      fullscreen: false
+                    });
+                  }
+                }
+              ];
+            })
+            .catch(function () {
+              return [];
+            });
+        },
+        'card-buttons': function (t, options) {
+          return [
+            {
+              icon: window.location.origin + '/icons/flame.svg',
+              text: 'Habit Tracker',
+              callback: function (tContext) {
+                return tContext.modal({
+                  title: 'Habit & Streak Tracker',
+                  url: window.location.origin + '/index.html',
+                  height: 800,
+                  fullscreen: false
+                });
+              }
+            }
+          ];
+        },
+        'board-buttons': function (t, options) {
+          return [
+            {
+              icon: {
+                dark: window.location.origin + '/icons/flame.svg',
+                light: window.location.origin + '/icons/flame.svg'
+              },
+              text: 'Habit Tracker',
+              callback: function (tContext) {
+                return tContext.modal({
+                  title: 'Habit & Streak Tracker',
+                  url: window.location.origin + '/index.html',
+                  height: 800,
+                  fullscreen: false
+                });
+              }
+            }
+          ];
+        }
+      });
+    </script>
+  </head>
+  <body></body>
+</html>
