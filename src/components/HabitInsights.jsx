@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState } from 'react'
 import {
   Brain,
   Sparkles,
@@ -9,17 +9,9 @@ import {
   Zap,
   ShieldCheck,
   RefreshCw,
-  Key,
-  ExternalLink,
-  ChevronDown,
-  ChevronUp,
   Award
 } from 'lucide-react'
-import {
-  generateAICoaching,
-  getStoredApiKey,
-  saveStoredApiKey
-} from '../services/aiCoach'
+import { generateAICoaching } from '../services/aiCoach'
 
 export default function HabitInsights({
   habitName = 'Daily Habit & Focus',
@@ -30,35 +22,19 @@ export default function HabitInsights({
   trelloContext = null
 }) {
   const [showCoachModal, setShowCoachModal] = useState(false)
-  const [apiKey, setApiKey] = useState('')
-  const [keyInput, setKeyInput] = useState('')
-  const [showKeySettings, setShowKeySettings] = useState(false)
   const [isLoadingAI, setIsLoadingAI] = useState(false)
   const [aiResult, setAiResult] = useState(null)
   const [aiError, setAiError] = useState(null)
-  const [saveSuccessMsg, setSaveSuccessMsg] = useState('')
 
-  // Load any stored API key on mount
-  useEffect(() => {
-    async function loadKey() {
-      const stored = await getStoredApiKey(trelloContext)
-      if (stored) {
-        setApiKey(stored)
-        setKeyInput(stored)
-      }
-    }
-    loadKey()
-  }, [trelloContext])
-
-  // Trigger AI generation when modal opens (if key exists and no result yet)
+  // Open modal and fetch AI coaching automatically
   const handleOpenModal = () => {
     setShowCoachModal(true)
     if (!aiResult && !isLoadingAI) {
-      triggerAICoaching(apiKey)
+      triggerAICoaching()
     }
   }
 
-  const triggerAICoaching = async (keyToUse = apiKey) => {
+  const triggerAICoaching = async () => {
     setIsLoadingAI(true)
     setAiError(null)
     try {
@@ -68,37 +44,17 @@ export default function HabitInsights({
         bestStreak,
         weeklyPercent,
         monthlyPercent,
-        apiKey: keyToUse,
         t: trelloContext
       })
       setAiResult(coaching)
     } catch (err) {
-      if (err.message === 'NO_API_KEY') {
-        // No key configured yet: fall back cleanly to behavioral engine without error
-        setAiResult(null)
-      } else {
-        setAiError(err.message || 'Failed to generate AI insights')
-      }
+      setAiError(err.message || 'Failed to generate AI insights')
     } finally {
       setIsLoadingAI(false)
     }
   }
 
-  const handleSaveKey = async (e) => {
-    e.preventDefault()
-    const cleanKey = keyInput.trim()
-    await saveStoredApiKey(trelloContext, cleanKey)
-    setApiKey(cleanKey)
-    setSaveSuccessMsg(cleanKey ? 'API key saved!' : 'Key removed')
-    setTimeout(() => setSaveSuccessMsg(''), 2500)
-
-    if (cleanKey) {
-      setShowKeySettings(false)
-      triggerAICoaching(cleanKey)
-    }
-  }
-
-  // Determine stage based on current streak
+  // Determine habit stage based on current streak
   const stageName =
     currentStreak >= 10
       ? 'Stable Automaticity'
@@ -154,7 +110,7 @@ export default function HabitInsights({
               <li className="flex items-start gap-2">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 mt-1.5 shrink-0" />
                 <span>
-                  Impressive active streak of <strong className="text-slate-800 font-semibold">{currentStreak} consecutive days</strong>. You have strong muscle memory!
+                  Impressive active streak of <strong className="text-slate-800 font-semibold">{currentStreak} consecutive days</strong>. Strong neural pathways established!
                 </span>
               </li>
               <li className="flex items-start gap-2">
@@ -186,32 +142,31 @@ export default function HabitInsights({
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
           <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full border border-slate-200 overflow-hidden animate-in fade-in zoom-in-95 duration-150 flex flex-col max-h-[85vh]">
             {/* Modal Header */}
-            <div className="bg-gradient-to-r from-purple-700 via-indigo-700 to-purple-800 px-6 py-4 text-white flex items-center justify-between shrink-0">
+            <div className="bg-gradient-to-r from-purple-700 via-indigo-700 to-purple-800 px-6 py-4.5 text-white flex items-center justify-between shrink-0">
               <div className="flex items-center gap-2.5">
                 <Sparkles className="w-5 h-5 text-purple-200" />
                 <div>
                   <div className="flex items-center gap-2">
                     <h4 className="font-bold text-base text-white">Deep AI Habit Coach</h4>
-                    {aiResult?.source?.includes('gemini') && (
-                      <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-purple-500/40 text-purple-100 border border-purple-300/30">
-                        Gemini 1.5 Flash
-                      </span>
-                    )}
+                    <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-purple-500/40 text-purple-100 border border-purple-300/30">
+                      Gemini AI
+                    </span>
                   </div>
-                  <p className="text-[11px] text-purple-200 leading-none mt-0.5">
-                    Personalized guidance for &ldquo;{habitName}&rdquo;
+                  <p className="text-[11px] text-purple-200 leading-none mt-1">
+                    Live coaching for &ldquo;{habitName}&rdquo;
                   </p>
                 </div>
               </div>
-              <div className="flex items-center gap-1">
-                {apiKey && !isLoadingAI && (
+              <div className="flex items-center gap-1.5">
+                {!isLoadingAI && (
                   <button
                     type="button"
-                    title="Regenerate AI Coaching"
-                    onClick={() => triggerAICoaching(apiKey)}
-                    className="text-purple-200 hover:text-white p-1.5 rounded-lg hover:bg-white/10 transition-colors cursor-pointer"
+                    title="Regenerate Fresh AI Coaching"
+                    onClick={triggerAICoaching}
+                    className="flex items-center gap-1 text-xs font-semibold text-purple-100 hover:text-white px-2 py-1 rounded-lg hover:bg-white/10 transition-colors cursor-pointer"
                   >
-                    <RefreshCw className="w-4 h-4" />
+                    <RefreshCw className="w-3.5 h-3.5" />
+                    <span>Regenerate</span>
                   </button>
                 )}
                 <button
@@ -226,110 +181,47 @@ export default function HabitInsights({
 
             {/* Modal Body */}
             <div className="p-6 space-y-4 overflow-y-auto flex-1">
-              {/* API Key Toggle Banner */}
-              <div className="border border-purple-100 rounded-xl bg-purple-50/50 overflow-hidden transition-all">
-                <button
-                  type="button"
-                  onClick={() => setShowKeySettings(!showKeySettings)}
-                  className="w-full px-3.5 py-2.5 flex items-center justify-between text-left text-xs font-semibold text-purple-900 hover:bg-purple-100/50 transition-colors"
-                >
-                  <div className="flex items-center gap-2">
-                    <Key className="w-3.5 h-3.5 text-purple-600" />
-                    <span>
-                      {apiKey
-                        ? 'Google Gemini API Connected (Free)'
-                        : 'Connect Free Google Gemini AI API'}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-1 text-purple-600 text-[11px]">
-                    <span>{showKeySettings ? 'Hide' : apiKey ? 'Manage Key' : 'Setup (Free)'}</span>
-                    {showKeySettings ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
-                  </div>
-                </button>
-
-                {showKeySettings && (
-                  <form onSubmit={handleSaveKey} className="p-3.5 pt-1 border-t border-purple-100 space-y-2.5 bg-white">
-                    <p className="text-[11px] text-slate-600 leading-relaxed">
-                      Google AI Studio provides 100% free Gemini API keys (1,500 requests/day, no credit card required).
-                    </p>
-                    <div className="flex gap-2">
-                      <input
-                        type="password"
-                        placeholder="Paste your free Gemini API key here..."
-                        value={keyInput}
-                        onChange={(e) => setKeyInput(e.target.value)}
-                        className="flex-1 px-3 py-1.5 text-xs rounded-lg border border-slate-200 focus:outline-none focus:border-purple-600 font-mono"
-                      />
-                      <button
-                        type="submit"
-                        className="px-3 py-1.5 bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold rounded-lg transition-colors cursor-pointer shrink-0"
-                      >
-                        Save & Test
-                      </button>
-                    </div>
-
-                    <div className="flex items-center justify-between text-[11px]">
-                      <a
-                        href="https://aistudio.google.com/app/apikey"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1 text-purple-700 font-bold hover:underline"
-                      >
-                        <span>Get free key at Google AI Studio</span>
-                        <ExternalLink className="w-3 h-3" />
-                      </a>
-                      {saveSuccessMsg && (
-                        <span className="text-emerald-600 font-bold">{saveSuccessMsg}</span>
-                      )}
-                    </div>
-                  </form>
-                )}
-              </div>
-
               {/* AI Loading State */}
               {isLoadingAI ? (
-                <div className="py-10 flex flex-col items-center justify-center text-center space-y-3">
+                <div className="py-12 flex flex-col items-center justify-center text-center space-y-3">
                   <div className="relative">
-                    <div className="w-12 h-12 rounded-2xl bg-purple-100 flex items-center justify-center text-purple-600 animate-pulse">
-                      <Brain className="w-6 h-6 animate-spin" />
+                    <div className="w-14 h-14 rounded-2xl bg-purple-100 flex items-center justify-center text-purple-600 animate-pulse">
+                      <Brain className="w-7 h-7 animate-spin" />
                     </div>
-                    <Sparkles className="w-4 h-4 text-purple-500 absolute -top-1 -right-1 animate-bounce" />
+                    <Sparkles className="w-5 h-5 text-amber-400 absolute -top-1 -right-1 animate-bounce" />
                   </div>
                   <div>
                     <h5 className="font-bold text-sm text-slate-800">
-                      Consulting Gemini AI Coach...
+                      Analyzing streak with Gemini AI...
                     </h5>
-                    <p className="text-xs text-slate-500 mt-0.5">
-                      Synthesizing behavioral neuroscience & streak cadence
+                    <p className="text-xs text-slate-500 mt-1">
+                      Synthesizing behavioral science & streak cadence
                     </p>
                   </div>
                 </div>
               ) : aiError ? (
-                /* AI Error Notification */
-                <div className="p-3.5 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs space-y-2">
-                  <div className="flex items-center gap-2 font-bold">
-                    <AlertTriangle className="w-4 h-4 text-red-600" />
-                    <span>API Connection Notice</span>
+                /* AI Error Fallback Notification */
+                <div className="p-3.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-xs space-y-2">
+                  <div className="flex items-center gap-2 font-bold text-amber-800">
+                    <AlertTriangle className="w-4 h-4 text-amber-600" />
+                    <span>Behavioral Engine Active</span>
                   </div>
-                  <p>{aiError}</p>
-                  <p className="text-[11px] text-red-600">
-                    Showing local Behavioral Science Engine recommendations below:
+                  <p className="text-[11px] text-amber-800">
+                    Displaying expert cognitive recommendations below:
                   </p>
                 </div>
               ) : null}
 
-              {/* AI or Behavioral Engine Content */}
+              {/* Main AI Coaching Content */}
               {!isLoadingAI && (
                 <>
                   {/* Diagnosis Card */}
                   <div className="bg-purple-50/70 border border-purple-100 rounded-xl p-4">
                     <div className="flex items-center gap-2 text-purple-900 font-bold text-sm mb-1.5">
                       <Zap className="w-4 h-4 text-purple-600" />
-                      <span>
-                        {aiResult ? 'Gemini AI Diagnosis' : 'Personalized Diagnosis'}
-                      </span>
+                      <span>Gemini AI Diagnosis</span>
                     </div>
-                    <p className="text-xs text-purple-900 leading-relaxed font-medium">
+                    <p className="text-xs text-purple-950 leading-relaxed font-medium">
                       {aiResult?.diagnosis || (
                         <>
                           Your current active streak is <strong>{currentStreak} days</strong>, with your peak at <strong>{bestStreak} days</strong>. You have crossed the 10-day automaticity threshold where resistance drops by 43%.
@@ -365,19 +257,19 @@ export default function HabitInsights({
                       <ShieldCheck className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
                       <div>
                         <h6 className="text-xs font-bold text-slate-800">
-                          {aiResult?.dropOffDefense?.title || 'Implementation Intentions'}
+                          {aiResult?.dropOffDefense?.title || 'Never Miss Twice Anchor'}
                         </h6>
                         <p className="text-xs text-slate-600 mt-1 leading-relaxed">
                           {aiResult?.dropOffDefense?.description || (
                             <>
-                              Pre-commit: <em>&ldquo;When I finish morning standup, I will immediately execute my habit.&rdquo;</em>
+                              Missing 1 day is an accident; missing 2 days is the start of a new habit. Scale back the intensity if needed, but show up.
                             </>
                           )}
                         </p>
                       </div>
                     </div>
 
-                    {/* Identity Statement (if generated by Gemini) */}
+                    {/* Identity Statement */}
                     {aiResult?.identityStatement && (
                       <div className="flex gap-3 items-start p-3.5 rounded-xl border border-indigo-100 bg-indigo-50/50">
                         <Award className="w-4 h-4 text-indigo-600 shrink-0 mt-0.5" />
@@ -399,9 +291,7 @@ export default function HabitInsights({
             {/* Modal Footer */}
             <div className="bg-slate-50 px-6 py-3.5 border-t border-slate-100 flex items-center justify-between shrink-0">
               <span className="text-[11px] text-slate-500 font-medium">
-                {aiResult?.source?.includes('gemini')
-                  ? '⚡ Powered by Google Gemini AI'
-                  : '🧠 Powered by Behavioral Science Engine'}
+                ⚡ Powered by Google Gemini AI
               </span>
               <button
                 type="button"
