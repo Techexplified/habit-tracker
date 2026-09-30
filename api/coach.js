@@ -3,7 +3,6 @@
 const B64_TOKEN = 'QVEuQWI4Uk42Sk5mQW1ObVdva3hBZTlDUWJBUVJOaEpVaVNFZVBIbXN6S3pKYWQ4WmFFRlE='
 
 export default async function handler(req, res) {
-  // Set CORS headers for Trello iframe domain
   res.setHeader('Access-Control-Allow-Credentials', true)
   res.setHeader('Access-Control-Allow-Origin', '*')
   res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,POST')
@@ -20,7 +19,14 @@ export default async function handler(req, res) {
 
   const defaultKey = Buffer.from(B64_TOKEN, 'base64').toString('utf-8')
   const apiKey = process.env.GEMINI_API_KEY || defaultKey
-  const { habitName = 'Daily Habit', currentStreak = 0, bestStreak = 0, weeklyPercent = 0, monthlyPercent = 0 } = req.body || {}
+  const {
+    habitName = 'Daily Habit',
+    currentStreak = 0,
+    bestStreak = 0,
+    weeklyPercent = 0,
+    monthlyPercent = 0,
+    angle = 'Focus on fresh behavioral micro-tactics.'
+  } = req.body || {}
 
   const prompt = `You are an elite behavioral science habit coach combining James Clear's "Atomic Habits" and BJ Fogg's "Tiny Habits".
 Analyze this user's habit progress and provide hyper-personalized, concise coaching:
@@ -30,14 +36,16 @@ Current Active Streak: ${currentStreak} consecutive days
 Best All-Time Streak: ${bestStreak} days
 Weekly Adherence: ${weeklyPercent}%
 Monthly Adherence: ${monthlyPercent}%
+Focus Perspective: ${angle}
+Iteration Seed: ${Date.now()}
 
 Respond ONLY with a valid JSON object matching this exact schema (no markdown fences, no extra text):
 {
   "stage": "Initiation" (if 1-3d) OR "Ramp-up" (if 4-9d) OR "Stable Automaticity" (if 10+d),
-  "diagnosis": "1 concise, empowering sentence assessing their momentum and neurological habit stage.",
+  "diagnosis": "1 concise, empowering sentence assessing their momentum and neurological habit stage with a fresh perspective.",
   "microTactic": {
     "title": "A punchy 3-4 word tactic name",
-    "description": "Specific 1-2 sentence behavioral tactic tailored directly to the habit '${habitName}'."
+    "description": "Specific 1-2 sentence behavioral tactic tailored directly to the habit '${habitName}' emphasizing: ${angle}."
   },
   "dropOffDefense": {
     "title": "Never Miss Twice Anchor",
@@ -53,7 +61,7 @@ Respond ONLY with a valid JSON object matching this exact schema (no markdown fe
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         contents: [{ parts: [{ text: prompt }] }],
-        generationConfig: { temperature: 0.7, maxOutputTokens: 600 }
+        generationConfig: { temperature: 0.9, maxOutputTokens: 600 }
       })
     })
 
