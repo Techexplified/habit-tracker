@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Account Settings</title>
+    <script src="https://p.trellocdn.com/power-up.min.js"></script>
+    <style>
+      body {
+        margin: 0;
+        padding: 16px;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        background: #ffffff;
+        color: #0f172a;
+        font-size: 13px;
+      }
+      .status-box {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        background: #f0fdf4;
+        border: 1px solid #bbf7d0;
+        color: #166534;
+        padding: 10px 12px;
+        border-radius: 8px;
+        font-weight: 600;
+        margin-bottom: 16px;
+      }
+      .status-box.unauthorized {
+        background: #f8fafc;
+        border-color: #e2e8f0;
+        color: #64748b;
+      }
+      .btn {
+        display: block;
+        width: 100%;
+        box-sizing: border-box;
+        padding: 8px 12px;
+        border-radius: 6px;
+        font-weight: 600;
+        font-size: 13px;
+        cursor: pointer;
+        text-align: center;
+        border: none;
+        transition: background 0.15s ease;
+      }
+      .btn-danger {
+        background: #fee2e2;
+        color: #991b1b;
+      }
+      .btn-danger:hover {
+        background: #fecaca;
+      }
+      .btn-primary {
+        background: #00875a;
+        color: white;
+      }
+      .btn-primary:hover {
+        background: #007048;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="status" class="status-box">
+      <span>●</span>
+      <span id="status-text">Checking status...</span>
+    </div>
+
+    <button id="action-btn" class="btn btn-danger" style="display: none;">
+      Disconnect Account
+    </button>
+
+    <script>
+      var t = window.TrelloPowerUp.iframe();
+      var statusBox = document.getElementById('status');
+      var statusText = document.getElementById('status-text');
+      var actionBtn = document.getElementById('action-btn');
+
+      t.get('member', 'private', 'token')
+        .then(function(token) {
+          if (token) {
+            statusBox.className = 'status-box';
+            statusText.textContent = 'Connected to Trello';
+            actionBtn.textContent = 'Disconnect Account';
+            actionBtn.className = 'btn btn-danger';
+            actionBtn.style.display = 'block';
+
+            actionBtn.onclick = function() {
+              t.set('member', 'private', 'token', null)
+                .then(function() {
+                  try { localStorage.removeItem('trello_member_token'); } catch(e) {}
+                  t.closePopup();
+                });
+            };
+          } else {
+            statusBox.className = 'status-box unauthorized';
+            statusText.textContent = 'Not Authorized';
+            actionBtn.textContent = 'Authorize Account';
+            actionBtn.className = 'btn btn-primary';
+            actionBtn.style.display = 'block';
+
+            actionBtn.onclick = function() {
+              t.popup({
+                title: 'Authorize Habit Tracker',
+                url: './authorize.html',
+                height: 220
+              });
+            };
+          }
+        });
+    </script>
+  </body>
+</html>

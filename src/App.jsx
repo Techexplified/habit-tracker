@@ -35,6 +35,7 @@ export default function App() {
   // Auth State
   const [isAuthorized, setIsAuthorized] = useState(false)
   const [apiKey, setApiKey] = useState('')
+  const [memberProfile, setMemberProfile] = useState(null)
 
   // Initialize Trello context and load initial data
   useEffect(() => {
@@ -46,6 +47,7 @@ export default function App() {
       const authInfo = await getTrelloAuthInfo(t)
       setIsAuthorized(authInfo.isAuthorized)
       setApiKey(authInfo.apiKey)
+      setMemberProfile(authInfo.memberProfile)
 
       // 2. Load Habit Data
       const data = await loadHabitData(t)
@@ -161,6 +163,7 @@ export default function App() {
         t={trelloRef.current}
         isAuthorized={isAuthorized}
         apiKey={apiKey}
+        memberProfile={memberProfile}
         onAuthChange={handleAuthChange}
       />
 

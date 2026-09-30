@@ -6,13 +6,14 @@ export async function getTrelloAuthInfo(t) {
   let isAuthorized = false
   let memberToken = null
   let apiKey = DEFAULT_API_KEY
+  let memberProfile = null
 
   // Check localStorage first
   try {
     const localToken = localStorage.getItem('trello_member_token')
     const localKey = localStorage.getItem('trello_api_key')
     if (localToken) memberToken = localToken
-    if (localKey) apiKey = localKey
+    if (localKey && !apiKey) apiKey = localKey
   } catch {}
 
   // If inside Trello iframe
@@ -27,16 +28,27 @@ export async function getTrelloAuthInfo(t) {
       ])
 
       if (token) memberToken = token
-      if (boardKey) apiKey = boardKey
+      if (boardKey && !apiKey) apiKey = boardKey
     } catch {}
   }
 
   isAuthorized = Boolean(memberToken && memberToken.length > 10)
 
+  // If authorized and we have apiKey + token, optionally fetch member details
+  if (isAuthorized && apiKey) {
+    try {
+      const res = await fetch(`https://api.trello.com/1/members/me?key=${apiKey}&token=${memberToken}&fields=fullName,username,avatarUrl`)
+      if (res.ok) {
+        memberProfile = await res.json()
+      }
+    } catch {}
+  }
+
   return {
     isAuthorized,
     memberToken,
-    apiKey
+    apiKey,
+    memberProfile
   }
 }
 
@@ -95,7 +107,7 @@ export function authorizeWithTrello(t, apiKey) {
     // Outside Trello iframe or fallback: popup window with postMessage listener
     const popup = window.open(authUrl, 'TrelloAuth', 'width=580,height=680')
     if (!popup) {
-      reject(new Error('Popup blocked. Please allow popups for this site.'))
+      reject(new Error('Popup blocked. Please allow popups for this site in your browser settings.'))
       return
     }
 
@@ -120,12 +132,11 @@ export function authorizeWithTrello(t, apiKey) {
       if (popup.closed) {
         clearInterval(timer)
         window.removeEventListener('message', messageHandler)
-        // Check if token was saved in localStorage by auth-return.html
         const token = localStorage.getItem('trello_member_token')
         if (token) {
           resolve(token)
         } else {
-          reject(new Error('Authorization window closed without completing'))
+          reject(new Error('Authorization window closed before completing'))
         }
       }
     }, 1000)

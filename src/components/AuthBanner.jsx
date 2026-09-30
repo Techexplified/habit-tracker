@@ -1,11 +1,12 @@
 import React, { useState } from 'react'
-import { Key, ShieldCheck, ExternalLink, LogOut, ChevronDown, ChevronUp } from 'lucide-react'
+import { Key, ShieldCheck, ExternalLink, LogOut, ChevronDown, ChevronUp, User } from 'lucide-react'
 import { authorizeWithTrello, clearAuthToken, saveApiKey } from '../services/trelloAuth'
 
 export default function AuthBanner({
   t,
   isAuthorized,
   apiKey,
+  memberProfile,
   onAuthChange
 }) {
   const [inputKey, setInputKey] = useState(apiKey || '')
@@ -15,7 +16,7 @@ export default function AuthBanner({
 
   const handleAuthorize = async () => {
     if (!inputKey.trim()) {
-      setErrorMsg('Please enter your Trello API Key first.')
+      setErrorMsg('Please enter your 32-character Trello API Key.')
       return
     }
 
@@ -42,17 +43,26 @@ export default function AuthBanner({
   if (isAuthorized) {
     return (
       <div className="bg-emerald-50/70 border border-emerald-200/80 rounded-xl px-4 py-2.5 flex items-center justify-between text-xs text-emerald-800">
-        <div className="flex items-center gap-2">
-          <ShieldCheck className="w-4 h-4 text-emerald-600" />
-          <span className="font-semibold">Connected to Trello Account</span>
-          <span className="text-emerald-600 hidden sm:inline">• Auth Active</span>
+        <div className="flex items-center gap-2.5">
+          <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
+          <div className="flex items-center gap-1.5 flex-wrap">
+            <span className="font-semibold">Connected to Trello</span>
+            {memberProfile ? (
+              <span className="text-emerald-700 font-medium">
+                as <strong>{memberProfile.fullName || memberProfile.username}</strong>
+                {memberProfile.username && ` (@${memberProfile.username})`}
+              </span>
+            ) : (
+              <span className="text-emerald-600 hidden sm:inline">• Auth Active</span>
+            )}
+          </div>
         </div>
 
         <button
           type="button"
           onClick={handleDisconnect}
-          className="inline-flex items-center gap-1 text-slate-500 hover:text-rose-600 font-medium px-2 py-1 rounded hover:bg-white/80 transition-colors cursor-pointer"
-          title="Disconnect Trello Token"
+          className="inline-flex items-center gap-1 text-slate-500 hover:text-rose-600 font-medium px-2 py-1 rounded hover:bg-white/80 transition-colors cursor-pointer shrink-0"
+          title="Disconnect Trello Account"
         >
           <LogOut className="w-3.5 h-3.5" />
           <span>Disconnect</span>
@@ -71,7 +81,7 @@ export default function AuthBanner({
           <div>
             <h4 className="text-sm font-bold text-slate-900">Trello Account Authorization</h4>
             <p className="text-xs text-slate-500">
-              Authorize to link habit streaks directly with your Trello user profile.
+              Connect with your Trello account to synchronize habits across all your boards.
             </p>
           </div>
         </div>
@@ -116,14 +126,14 @@ export default function AuthBanner({
           )}
 
           <div className="flex items-center justify-between text-[11px] text-slate-500 pt-1">
-            <span>Don&apos;t have your API Key yet?</span>
+            <span>Don&apos;t have your API Key?</span>
             <a
               href="https://trello.com/power-ups/admin"
               target="_blank"
               rel="noreferrer"
               className="text-blue-600 hover:underline flex items-center gap-1 font-medium"
             >
-              <span>Get API Key from Trello Admin</span>
+              <span>Get API Key from Trello Power-Up Admin</span>
               <ExternalLink className="w-3 h-3" />
             </a>
           </div>
