@@ -1,6 +1,6 @@
 import React from 'react'
 import { Calendar as CalendarIcon, ChevronLeft, ChevronRight } from 'lucide-react'
-import { formatDateKey } from '../services/habitStorage'
+import { formatDateKey, parseDateKey } from '../services/habitStorage'
 
 const MONTH_NAMES = [
   'January', 'February', 'March', 'April', 'May', 'June',
@@ -10,9 +10,9 @@ const MONTH_NAMES = [
 const DAYS_OF_WEEK = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN']
 
 export default function HabitCalendar({
-  year = 2026,
-  month = 8, // September (0-indexed)
-  todayDate = new Date(2026, 8, 24),
+  year,
+  month,
+  todayDate = new Date(),
   markedDates = [],
   onToggleDate,
   onPrevMonth,
@@ -20,6 +20,9 @@ export default function HabitCalendar({
 }) {
   const markedSet = new Set(markedDates)
   const todayKey = formatDateKey(todayDate)
+
+  const todayStart = new Date(todayDate)
+  todayStart.setHours(0, 0, 0, 0)
 
   // Calculate days in month and offsets for Monday-first calendar
   const daysInCurrentMonth = new Date(year, month + 1, 0).getDate()
@@ -47,25 +50,13 @@ export default function HabitCalendar({
     const prevMonthIdx = month === 0 ? 11 : month - 1
     const prevYear = month === 0 ? year - 1 : year
     const dateKey = `${prevYear}-${String(prevMonthIdx + 1).padStart(2, '0')}-${String(dayNum).padStart(2, '0')}`
-    calendarCells.push({
-      dayNumber: dayNum,
-      dateKey,
-      isCurrentMonth: false,
-      isMarked: markedSet.has(dateKey),
-      isToday: dateKey === todayKey
-    })
+    calendarCells.push(buildCell(dateKey, dayNum, false))
   }
 
   // 2. Current month days
   for (let dayNum = 1; dayNum <= daysInCurrentMonth; dayNum++) {
     const dateKey = `${year}-${String(month + 1).padStart(2, '0')}-${String(dayNum).padStart(2, '0')}`
-    calendarCells.push({
-      dayNumber: dayNum,
-      dateKey,
-      isCurrentMonth: true,
-      isMarked: markedSet.has(dateKey),
-      isToday: dateKey === todayKey
-    })
+    calendarCells.push(buildCell(dateKey, dayNum, true))
   }
 
   // 3. Next month leading days (to complete 35 or 42 cells)
@@ -74,13 +65,25 @@ export default function HabitCalendar({
     const nextMonthIdx = month === 11 ? 0 : month + 1
     const nextYear = month === 11 ? year + 1 : year
     const dateKey = `${nextYear}-${String(nextMonthIdx + 1).padStart(2, '0')}-${String(dayNum).padStart(2, '0')}`
-    calendarCells.push({
-      dayNumber: dayNum,
+    calendarCells.push(buildCell(dateKey, dayNum, false))
+  }
+
+  function buildCell(dateKey, dayNumber, isCurrentMonth) {
+    const cellDate = parseDateKey(dateKey)
+    cellDate.setHours(0, 0, 0, 0)
+    const isToday = dateKey === todayKey
+    const isFuture = cellDate > todayStart
+    const isPast = cellDate < todayStart
+
+    return {
+      dayNumber,
       dateKey,
-      isCurrentMonth: false,
+      isCurrentMonth,
       isMarked: markedSet.has(dateKey),
-      isToday: dateKey === todayKey
-    })
+      isToday,
+      isFuture,
+      isPast
+    }
   }
 
   return (
@@ -133,29 +136,45 @@ export default function HabitCalendar({
       {/* Calendar Cells Grid */}
       <div className="grid grid-cols-7 gap-2.5">
         {calendarCells.map((cell) => {
-          const { dayNumber, dateKey, isCurrentMonth, isMarked, isToday } = cell
+          const { dayNumber, dateKey, isCurrentMonth, isMarked, isToday, isFuture } = cell
 
           return (
             <button
               key={dateKey}
               type="button"
-              onClick={() => onToggleDate(dateKey)}
-              className={`relative aspect-square sm:aspect-auto sm:h-16 rounded-xl flex flex-col items-center justify-center p-1 transition-all cursor-pointer select-none group ${
-                isMarked
-                  ? 'bg-blue-600 hover:bg-blue-700 text-white shadow-sm shadow-blue-600/30'
+              disabled={!isToday}
+              onClick={isToday ? () => onToggleDate(dateKey) : undefined}
+              title={
+                isToday
+                  ? 'Today: Click to toggle habit'
+                  : isFuture
+                  ? 'Future date (cannot be toggled)'
+                  : isMarked
+                  ? 'Completed habit (past history)'
+                  : 'Incomplete day (past history)'
+              }
+              className={`relative aspect-square sm:aspect-auto sm:h-16 rounded-xl flex flex-col items-center justify-center p-1 transition-all select-none group ${
+                isToday
+                  ? isMarked
+                    ? 'bg-blue-600 hover:bg-blue-700 text-white shadow-md shadow-blue-600/30 ring-2 ring-amber-400 ring-offset-2 cursor-pointer hover:scale-[1.03] active:scale-95'
+                    : 'bg-white hover:bg-amber-50/50 border-2 border-amber-400 text-slate-800 shadow-sm cursor-pointer hover:scale-[1.03] active:scale-95'
+                  : isMarked
+                  ? 'bg-blue-600/90 text-white cursor-default'
+                  : isFuture
+                  ? 'bg-slate-50/40 border border-slate-100 text-slate-300 cursor-not-allowed opacity-60'
                   : isCurrentMonth
-                  ? 'bg-white hover:bg-slate-50 border border-slate-200 text-slate-700'
-                  : 'bg-slate-50/50 border border-slate-100 text-slate-300'
-              } ${
-                isToday ? 'ring-2 ring-amber-400 ring-offset-2' : ''
+                  ? 'bg-white border border-slate-200 text-slate-600 cursor-default'
+                  : 'bg-slate-50/30 border border-slate-100 text-slate-300 cursor-default'
               }`}
             >
               <span
                 className={`text-sm sm:text-base font-bold leading-none ${
                   isMarked
                     ? 'text-white'
+                    : isToday
+                    ? 'text-slate-900 font-extrabold'
                     : isCurrentMonth
-                    ? 'text-slate-700'
+                    ? 'text-slate-600'
                     : 'text-slate-300'
                 }`}
               >
@@ -182,7 +201,7 @@ export default function HabitCalendar({
           </div>
           <div className="flex items-center gap-2">
             <span className="w-3.5 h-3.5 rounded bg-white border-2 border-amber-400 inline-block" />
-            <span className="text-slate-600 font-medium">Today</span>
+            <span className="text-slate-600 font-medium">Today (Click to toggle)</span>
           </div>
           <div className="flex items-center gap-2">
             <span className="w-3.5 h-3.5 rounded bg-white border border-slate-200 inline-block" />
@@ -190,8 +209,8 @@ export default function HabitCalendar({
           </div>
         </div>
 
-        <p className="text-slate-500 italic">
-          Tip: Click any past or current day to toggle completion
+        <p className="text-slate-500 font-medium">
+          💡 You can only toggle habit completion for Today
         </p>
       </div>
     </div>

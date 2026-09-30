@@ -2,25 +2,6 @@
 
 const STORAGE_KEY = 'habit_tracker_data_v1'
 
-// Initial seed data reproducing the exact September 2026 state from the UI mockup
-export const DEFAULT_SEED_DATA = {
-  habitName: 'Daily Habit & Focus',
-  targetDaysPerWeek: 7,
-  // 21 marked dates in September 2026:
-  // Sep 1-5, Sep 7-10, Sep 13, Sep 14-20, Sep 21-24
-  markedDates: [
-    '2026-09-01', '2026-09-02', '2026-09-03', '2026-09-04', '2026-09-05',
-    '2026-09-07', '2026-09-08', '2026-09-09', '2026-09-10',
-    '2026-09-13',
-    '2026-09-14', '2026-09-15', '2026-09-16', '2026-09-17', '2026-09-18', '2026-09-19', '2026-09-20',
-    '2026-09-21', '2026-09-22', '2026-09-23', '2026-09-24'
-  ],
-  bestAllTimeStreak: 18,
-  monthlyStreaksCount: 2,
-  monthlyMomentum: '+67% vs last mo',
-  customCoachNotes: []
-}
-
 export function formatDateKey(date) {
   const y = date.getFullYear()
   const m = String(date.getMonth() + 1).padStart(2, '0')
@@ -33,10 +14,42 @@ export function parseDateKey(str) {
   return new Date(y, m - 1, d)
 }
 
+// Generate dynamic initial seed data relative to the current real date
+export function getInitialSeedData() {
+  const today = new Date()
+  const dates = []
+
+  // Pre-fill active streak ending on today (e.g. today and past 5 days)
+  for (let i = 0; i <= 5; i++) {
+    const d = new Date(today)
+    d.setDate(today.getDate() - i)
+    dates.push(formatDateKey(d))
+  }
+
+  // Pre-fill some earlier days in the current month
+  for (let i = 8; i <= 14; i++) {
+    const d = new Date(today)
+    d.setDate(today.getDate() - i)
+    dates.push(formatDateKey(d))
+  }
+
+  return {
+    habitName: 'Daily Habit & Focus',
+    targetDaysPerWeek: 7,
+    markedDates: [...new Set(dates)].sort(),
+    bestAllTimeStreak: 18,
+    monthlyStreaksCount: 2,
+    monthlyMomentum: '+67% vs last mo',
+    customCoachNotes: []
+  }
+}
+
+export const DEFAULT_SEED_DATA = getInitialSeedData()
+
 /**
  * Calculates the current active streak counting backwards from today or yesterday.
  */
-export function calculateCurrentStreak(markedDates, referenceDate = new Date(2026, 8, 24)) {
+export function calculateCurrentStreak(markedDates, referenceDate = new Date()) {
   const markedSet = new Set(markedDates)
   const ref = new Date(referenceDate)
   ref.setHours(0, 0, 0, 0)
@@ -94,7 +107,7 @@ export function calculateBestStreak(markedDates, recordedBest = 18) {
 /**
  * Calculates Monday-Sunday weekly cadence for the week containing referenceDate.
  */
-export function calculateWeeklyCadence(markedDates, referenceDate = new Date(2026, 8, 24)) {
+export function calculateWeeklyCadence(markedDates, referenceDate = new Date()) {
   const markedSet = new Set(markedDates)
   const d = new Date(referenceDate)
   d.setHours(0, 0, 0, 0)
@@ -185,8 +198,7 @@ export async function loadHabitData(t) {
     console.warn('Could not read from localStorage:', err)
   }
 
-  // Seed default
-  return { ...DEFAULT_SEED_DATA }
+  return getInitialSeedData()
 }
 
 /**

@@ -18,13 +18,13 @@ import HabitInsights from './components/HabitInsights'
 export default function App() {
   const trelloRef = useRef(null)
 
-  // Simulation date: 2026-09-24 matches the UI mockup reference state
-  const [todayDate] = useState(() => new Date(2026, 8, 24))
+  // Real current date
+  const [todayDate] = useState(() => new Date())
   const todayKey = formatDateKey(todayDate)
 
-  // Calendar month/year navigation state
-  const [currentYear, setCurrentYear] = useState(2026)
-  const [currentMonth, setCurrentMonth] = useState(8) // September (0-indexed)
+  // Calendar month/year navigation state initialized to current month and year
+  const [currentYear, setCurrentYear] = useState(() => new Date().getFullYear())
+  const [currentMonth, setCurrentMonth] = useState(() => new Date().getMonth())
 
   // Habit dataset
   const [habitState, setHabitState] = useState(DEFAULT_SEED_DATA)
@@ -72,7 +72,7 @@ export default function App() {
     return calculateMonthlyStats(habitState.markedDates, currentYear, currentMonth)
   }, [habitState.markedDates, currentYear, currentMonth])
 
-  // Handler to toggle today
+  // Handler to toggle today (called from StreakHeader or calendar today cell)
   const handleToggleToday = async () => {
     const isCurrentlyMarked = habitState.markedDates.includes(todayKey)
     let updatedDates
@@ -91,23 +91,10 @@ export default function App() {
     await saveHabitData(trelloRef.current, updatedState)
   }
 
-  // Handler to toggle any date in calendar
+  // Handler to toggle any date in calendar (strictly limited to today)
   const handleToggleDate = async (dateKey) => {
-    const isMarked = habitState.markedDates.includes(dateKey)
-    let updatedDates
-    if (isMarked) {
-      updatedDates = habitState.markedDates.filter((d) => d !== dateKey)
-    } else {
-      updatedDates = [...habitState.markedDates, dateKey]
-    }
-
-    const updatedState = {
-      ...habitState,
-      markedDates: updatedDates
-    }
-
-    setHabitState(updatedState)
-    await saveHabitData(trelloRef.current, updatedState)
+    if (dateKey !== todayKey) return
+    await handleToggleToday()
   }
 
   // Month navigation
