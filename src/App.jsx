@@ -10,12 +10,10 @@ import {
   calculateMonthlyStats,
   DEFAULT_SEED_DATA
 } from './services/habitStorage'
-import { getTrelloAuthInfo } from './services/trelloAuth'
 import StreakHeader from './components/StreakHeader'
 import HabitCalendar from './components/HabitCalendar'
 import HabitAnalytics from './components/HabitAnalytics'
 import HabitInsights from './components/HabitInsights'
-import AuthBanner from './components/AuthBanner'
 
 export default function App() {
   const trelloRef = useRef(null)
@@ -32,24 +30,12 @@ export default function App() {
   const [habitState, setHabitState] = useState(DEFAULT_SEED_DATA)
   const [isLoaded, setIsLoaded] = useState(false)
 
-  // Auth State
-  const [isAuthorized, setIsAuthorized] = useState(false)
-  const [apiKey, setApiKey] = useState('')
-  const [memberProfile, setMemberProfile] = useState(null)
-
   // Initialize Trello context and load initial data
   useEffect(() => {
     const t = getTrelloContext()
     trelloRef.current = t
 
     async function init() {
-      // 1. Check Auth info
-      const authInfo = await getTrelloAuthInfo(t)
-      setIsAuthorized(authInfo.isAuthorized)
-      setApiKey(authInfo.apiKey)
-      setMemberProfile(authInfo.memberProfile)
-
-      // 2. Load Habit Data
       const data = await loadHabitData(t)
       setHabitState(data)
       setIsLoaded(true)
@@ -63,7 +49,7 @@ export default function App() {
     if (isLoaded && trelloRef.current) {
       autoSize(trelloRef.current)
     }
-  }, [isLoaded, habitState, currentMonth, currentYear, isAuthorized])
+  }, [isLoaded, habitState, currentMonth, currentYear])
 
   // Computed metrics
   const isMarkedToday = useMemo(() => {
@@ -143,11 +129,6 @@ export default function App() {
     }
   }
 
-  const handleAuthChange = (newAuthStatus, newApiKey) => {
-    setIsAuthorized(newAuthStatus)
-    if (newApiKey) setApiKey(newApiKey)
-  }
-
   if (!isLoaded) {
     return (
       <div className="min-h-[400px] flex items-center justify-center text-slate-400 font-medium">
@@ -158,15 +139,6 @@ export default function App() {
 
   return (
     <div className="max-w-4xl mx-auto p-3 sm:p-5 space-y-4">
-      {/* Auth Banner & Config */}
-      <AuthBanner
-        t={trelloRef.current}
-        isAuthorized={isAuthorized}
-        apiKey={apiKey}
-        memberProfile={memberProfile}
-        onAuthChange={handleAuthChange}
-      />
-
       {/* 1. Top Streak & Mark Today Header */}
       <StreakHeader
         currentStreak={currentStreak}
