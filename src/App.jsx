@@ -37,6 +37,14 @@ export default function App() {
 
     async function init() {
       const data = await loadHabitData(t)
+      if (t && typeof t.card === 'function') {
+        try {
+          const cardInfo = await t.card('name')
+          if (cardInfo && cardInfo.name) {
+            data.habitName = cardInfo.name
+          }
+        } catch {}
+      }
       setHabitState(data)
       setIsLoaded(true)
     }
@@ -82,9 +90,13 @@ export default function App() {
       updatedDates = [...habitState.markedDates, todayKey]
     }
 
+    const newStreak = calculateCurrentStreak(updatedDates, todayDate)
+
     const updatedState = {
       ...habitState,
-      markedDates: updatedDates
+      markedDates: updatedDates,
+      currentStreak: newStreak,
+      markedToday: updatedDates.includes(todayKey)
     }
 
     setHabitState(updatedState)
@@ -155,10 +167,12 @@ export default function App() {
 
       {/* 4. Behavioral Insights & Deep AI Coach */}
       <HabitInsights
+        habitName={habitState.habitName || 'Daily Habit & Focus'}
         currentStreak={currentStreak}
         bestStreak={bestStreak}
         weeklyPercent={weeklyStats.percentage}
         monthlyPercent={monthlyStats.percentage >= 70 ? 96 : monthlyStats.percentage}
+        trelloContext={trelloRef.current}
       />
     </div>
   )
