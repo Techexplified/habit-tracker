@@ -1,6 +1,6 @@
 // Trello API and OAuth Management Service
 
-const DEFAULT_API_KEY = import.meta.env.VITE_TRELLO_API_KEY || ''
+const DEFAULT_API_KEY = import.meta.env.VITE_TRELLO_API_KEY || 'pxqUTDXjx3zvn43oN5fMGyPehnuvRLra'
 
 export async function getTrelloAuthInfo(t) {
   let isAuthorized = false
@@ -34,7 +34,7 @@ export async function getTrelloAuthInfo(t) {
 
   isAuthorized = Boolean(memberToken && memberToken.length > 10)
 
-  // If authorized and we have apiKey + token, optionally fetch member details
+  // If authorized and we have apiKey + token, fetch member details
   if (isAuthorized && apiKey) {
     try {
       const res = await fetch(`https://api.trello.com/1/members/me?key=${apiKey}&token=${memberToken}&fields=fullName,username,avatarUrl`)
@@ -81,7 +81,7 @@ export function buildAuthorizeUrl(apiKey, returnUrl) {
   return `https://trello.com/1/authorize?expiration=never&name=${encodeURIComponent('Habit & Streak Tracker')}&scope=read,write&response_type=token&key=${encodeURIComponent(apiKey)}&return_url=${encodeURIComponent(effectiveReturnUrl)}`
 }
 
-export function authorizeWithTrello(t, apiKey) {
+export function authorizeWithTrello(t, apiKey = DEFAULT_API_KEY) {
   const returnUrl = `${window.location.origin}/auth-return.html`
   const authUrl = buildAuthorizeUrl(apiKey, returnUrl)
 
@@ -107,7 +107,7 @@ export function authorizeWithTrello(t, apiKey) {
     // Outside Trello iframe or fallback: popup window with postMessage listener
     const popup = window.open(authUrl, 'TrelloAuth', 'width=580,height=680')
     if (!popup) {
-      reject(new Error('Popup blocked. Please allow popups for this site in your browser settings.'))
+      reject(new Error('Popup blocked. Please allow popups in your browser.'))
       return
     }
 
