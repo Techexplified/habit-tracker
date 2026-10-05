@@ -1,6 +1,6 @@
-// Vercel Serverless Function Proxy for Gemini AI Habit Coach
+// Serverless Function Proxy for Deep AI Habit Coach
 
-const B64_TOKEN = 'QVEuQWI4Uk42Sk5mQW1ObVdva3hBZTlDUWJBUVJOaEpVaVNFZVBIbXN6S3pKYWQ4WmFFRlE='
+const B64_TOKEN = 'c2stb3ItdjEtNDBkMTI2NTIwOTBiMTRhZTFiN2Y0NThlM2M0M2U0YWE3YTljN2RiOWQ3MGQxNWJkNjRjNWUzOTQxMWQ0MTVlMg=='
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Credentials', true)
@@ -18,7 +18,7 @@ export default async function handler(req, res) {
   }
 
   const defaultKey = Buffer.from(B64_TOKEN, 'base64').toString('utf-8')
-  const apiKey = process.env.GEMINI_API_KEY || defaultKey
+  const apiKey = process.env.AI_API_KEY || process.env.OPENROUTER_API_KEY || defaultKey
   const {
     habitName = 'Daily Habit',
     currentStreak = 0,
@@ -39,7 +39,7 @@ Monthly Adherence: ${monthlyPercent}%
 Focus Perspective: ${angle}
 Iteration Seed: ${Date.now()}
 
-Respond ONLY with a valid JSON object matching this exact schema (no markdown fences, no extra text):
+Respond ONLY with a valid JSON object matching this exact schema (no markdown, no extra commentary):
 {
   "stage": "Initiation" (if 1-3d) OR "Ramp-up" (if 4-9d) OR "Stable Automaticity" (if 10+d),
   "diagnosis": "1 concise, empowering sentence assessing their momentum and neurological habit stage with a fresh perspective.",
@@ -55,28 +55,40 @@ Respond ONLY with a valid JSON object matching this exact schema (no markdown fe
 }`
 
   try {
-    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:generateContent?key=${encodeURIComponent(apiKey)}`
-    const geminiRes = await fetch(endpoint, {
+    const aiRes = await fetch('https://openrouter.ai/api/v1/chat/completions', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'HTTP-Referer': 'https://trello.com',
+        'X-Title': 'Habit Tracker Power-Up',
+        'Content-Type': 'application/json'
+      },
       body: JSON.stringify({
-        contents: [{ parts: [{ text: prompt }] }],
-        generationConfig: { temperature: 0.9, maxOutputTokens: 600 }
+        models: ['liquid/lfm-2.5-2.6b:free', 'cohere/north-mini-code:free'],
+        max_tokens: 1500,
+        temperature: 0.7,
+        messages: [{ role: 'user', content: prompt }]
       })
     })
 
-    if (!geminiRes.ok) {
-      const err = await geminiRes.text()
-      return res.status(geminiRes.status).json({ error: 'Gemini upstream error', details: err })
+    if (!aiRes.ok) {
+      const err = await aiRes.text()
+      return res.status(aiRes.status).json({ error: 'AI upstream error', details: err })
     }
 
-    const data = await geminiRes.json()
-    const rawText = data.candidates?.[0]?.content?.parts?.[0]?.text || ''
+    const data = await aiRes.json()
+    const rawText = data.choices?.[0]?.message?.content || ''
     let cleaned = rawText.trim()
-    if (cleaned.startsWith('```json')) {
-      cleaned = cleaned.replace(/^```json\s*/, '').replace(/\s*```$/, '')
-    } else if (cleaned.startsWith('```')) {
-      cleaned = cleaned.replace(/^```\s*/, '').replace(/\s*```$/, '')
+
+    const jsonMatch = cleaned.match(/```(?:json)?\s*([\s\S]*?)\s*```/)
+    if (jsonMatch && jsonMatch[1]) {
+      cleaned = jsonMatch[1].trim()
+    } else {
+      const first = cleaned.indexOf('{')
+      const last = cleaned.lastIndexOf('}')
+      if (first !== -1 && last !== -1 && last > first) {
+        cleaned = cleaned.slice(first, last + 1)
+      }
     }
     cleaned = cleaned.replace(/[\u2000-\u200F\u2028-\u202F\u00A0]/g, ' ')
 

@@ -81,7 +81,7 @@ export default function DeepAICoachView({
                 Deep AI Habit Coach
               </h2>
               <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-purple-100 text-purple-700 border border-purple-200">
-                Gemini AI
+                Adaptive
               </span>
             </div>
             <p className="text-xs text-slate-500 font-medium mt-0.5">
@@ -131,7 +131,7 @@ export default function DeepAICoachView({
           </div>
           <div>
             <h5 className="font-bold text-base text-slate-800">
-              Consulting Gemini AI Coach...
+              Consulting Deep AI Coach...
             </h5>
             <p className="text-xs text-slate-500 mt-1">
               Synthesizing behavioral science & streak cadence
@@ -143,7 +143,7 @@ export default function DeepAICoachView({
           {isRegenerating && (
             <div className="flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-purple-100/70 text-purple-800 text-xs font-bold animate-pulse border border-purple-200">
               <Sparkles className="w-4 h-4 text-purple-600" />
-              <span>Cooking up a fresh perspective with Gemini AI...</span>
+              <span>Cooking up a fresh behavioral perspective...</span>
             </div>
           )}
 
@@ -161,7 +161,7 @@ export default function DeepAICoachView({
           <div className="bg-gradient-to-r from-purple-50/80 to-indigo-50/50 border border-purple-100 rounded-2xl p-5">
             <div className="flex items-center gap-2 text-purple-900 font-bold text-sm mb-2">
               <Zap className="w-4 h-4 text-purple-600" />
-              <span>Gemini AI Diagnosis</span>
+              <span>Personalized AI Diagnosis</span>
             </div>
             <p className="text-sm text-purple-950 leading-relaxed font-medium">
               {aiResult?.diagnosis || (
@@ -246,7 +246,7 @@ export default function DeepAICoachView({
       {/* Footer */}
       <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
         <span className="font-medium">
-          ⚡ Powered by Google Gemini AI · Streak: {currentStreak} days
+          ⚡ Powered by Deep AI Habit Intelligence · Streak: {currentStreak} days
         </span>
         {onBackToCalendar && (
           <button

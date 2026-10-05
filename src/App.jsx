@@ -257,11 +257,11 @@ export default function App() {
                       Deep AI Coach
                     </span>
                     <span className="text-[10px] font-extrabold uppercase px-1.5 py-0.2 rounded-full bg-purple-100 text-purple-700">
-                      Gemini
+                      Adaptive
                     </span>
                   </div>
                   <div className="text-xs text-purple-600/90 font-semibold">
-                    Personalized Gemini AI guidance
+                    Personalized behavioral coaching
                   </div>
                 </div>
               </div>
