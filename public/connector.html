@@ -11,13 +11,13 @@
           return [
             {
               icon: {
-                dark: window.location.origin + '/icons/flame-dark.svg',
-                light: window.location.origin + '/icons/flame-light.svg'
+                dark: window.location.origin + '/icon.png',
+                light: window.location.origin + '/icon.png'
               },
-              text: 'Habit Tracker',
+              text: 'Build Your Habit',
               callback: function (tContext) {
                 return tContext.modal({
-                  title: 'Habit & Streak Tracker',
+                  title: 'Build Your Habit',
                   url: window.location.origin + '/index.html',
                   height: 840,
                   fullscreen: false
@@ -28,8 +28,8 @@
         },
         'card-back-section': function (t, options) {
           return {
-            title: 'Habit & Streak Tracker',
-            icon: window.location.origin + '/icons/flame-dark.svg',
+            title: 'Build Your Habit',
+            icon: window.location.origin + '/icon.png',
             content: {
               type: 'iframe',
               url: t.signUrl(window.location.origin + '/index.html'),
@@ -40,11 +40,11 @@
         'card-buttons': function (t, options) {
           return [
             {
-              icon: window.location.origin + '/icons/flame-light.svg',
-              text: 'Habit Tracker',
+              icon: window.location.origin + '/icon.png',
+              text: 'Build Your Habit',
               callback: function (tContext) {
                 return tContext.modal({
-                  title: 'Habit & Streak Tracker',
+                  title: 'Build Your Habit',
                   url: window.location.origin + '/index.html',
                   height: 840,
                   fullscreen: false
